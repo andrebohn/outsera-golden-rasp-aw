@@ -68,7 +68,7 @@ DELETE {{baseUrl}}/movie-list/:id
 
 Buscar Obter o produtor com maior intervalo entre dois prêmios consecutivos, e o que obteve dois prêmios mais rápido
 
-GET {{baseUrl}}/movie-list
+GET {{baseUrl}}/movie-list/min-max-intervals
 
 Resultado retornado com os dados base enviados no arquivo Movielist.csv 
 {
