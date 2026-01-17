@@ -15,7 +15,7 @@ import { UpdateMovieListDto } from './dto/update-movie-list.dto';
 
 @Controller('movie-list')
 export class MovieListController {
-  constructor(private readonly movieListService: MovieListService) {}
+  constructor(private readonly movieListService: MovieListService) { }
 
   @Post()
   create(@Body() createMovieListDto: CreateMovieListDto) {
@@ -33,7 +33,7 @@ export class MovieListController {
       return await this.movieListService.getMinMaxIntervals();
     } catch (err: any) {
       throw new InternalServerErrorException(
-        err?.message ?? 'Erro ao calcular intervals',
+        err?.message ?? 'Error calculating intervals',
       );
     }
   }
@@ -45,7 +45,7 @@ export class MovieListController {
   ) {
     const foundMovie = await this.movieListService.findOne(+id);
     if (!foundMovie) {
-      throw new NotFoundException(`Filme com ID ${id} não encontrado`);
+      throw new NotFoundException(`Movie with ID ${id} not found`);
     }
     return this.movieListService.update(+id, updateMovieListDto);
   }
@@ -54,7 +54,7 @@ export class MovieListController {
   async remove(@Param('id') id: string) {
     const foundMovie = await this.movieListService.findOne(+id);
     if (!foundMovie) {
-      throw new NotFoundException(`Filme com ID ${id} não encontrado`);
+      throw new NotFoundException(`Movie with ID ${id} not found`);
     }
     return this.movieListService.remove(+id);
   }

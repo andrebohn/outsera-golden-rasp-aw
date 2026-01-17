@@ -27,7 +27,7 @@ export class MovieListService implements OnApplicationBootstrap {
   constructor(
     @InjectRepository(MovieList)
     private movieListRepository: Repository<MovieList>,
-  ) {}
+  ) { }
 
   create(createMovieListDto: CreateMovieListDto) {
     return this.movieListRepository.save(createMovieListDto);
@@ -50,23 +50,22 @@ export class MovieListService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
-    this.logger.log('Iniciando carregamento de dados do CSV...');
+    this.logger.log('Starting CSV data loading...');
     await this.readFileData();
   }
 
-  // Carrega dados do arquivo CSV para o banco de dados
   async readFileData(): Promise<void> {
     return new Promise((resolve, reject) => {
       const csvMovieFile = path.join(process.cwd(), 'files/Movielist.csv');
 
       if (!fs.existsSync(csvMovieFile)) {
-        this.logger.warn(`Arquivo CSV não encontrado em: ${csvMovieFile}`);
+        this.logger.warn(`CSV file not found at: ${csvMovieFile}`);
         resolve();
         return;
       }
 
-      let linhasProcessadas = 0;
-      let qtdeErros = 0;
+      let processedLines = 0;
+      let errorCount = 0;
 
       const stream = fs
         .createReadStream(csvMovieFile)
@@ -83,39 +82,37 @@ export class MovieListService implements OnApplicationBootstrap {
             data.winner && data.winner.toLowerCase().trim() === 'yes';
 
           await this.movieListRepository.save(movie);
-          linhasProcessadas++;
+          processedLines++;
         } catch (error) {
-          qtdeErros++;
+          errorCount++;
           this.logger.error(
-            `Erro ao salvar filme: ${error.message} - Dados: ${JSON.stringify(data)}`,
+            `Error saving movie: ${error.message} - Data: ${JSON.stringify(data)}`,
           );
         }
       };
 
-      const linhas: any[] = [];
+      const lines: any[] = [];
 
       stream
         .on('data', (data) => {
-          linhas.push(data);
+          lines.push(data);
         })
         .on('end', async () => {
-          // Processar todas as linhas sequencialmente
-          for (const row of linhas) {
+          for (const row of lines) {
             await insertMovie(row);
           }
           this.logger.log(
-            `Leitura do arquivo CSV concluída. ${linhasProcessadas} filmes carregados, ${qtdeErros} erros.`,
+            `CSV file reading completed. ${processedLines} movies loaded, ${errorCount} errors.`,
           );
           resolve();
         })
         .on('error', (error) => {
-          this.logger.error(`Erro ao ler arquivo CSV: ${error.message}`);
+          this.logger.error(`Error reading CSV file: ${error.message}`);
           reject(error);
         });
     });
   }
 
-  // Analisa a string de produtores e retorna um array de nomes individuais
   parseProducers(producersStr: string): string[] {
     return (producersStr ?? "")
       .split(/\s*,\s*and\s+|\s*,\s*|\s+and\s+/i)
@@ -123,7 +120,6 @@ export class MovieListService implements OnApplicationBootstrap {
       .filter(Boolean);
   }
 
-  // Monta lista ordena por ano de todos os produtores com respectivo ano de premiação
   async buildProducerWinList(): Promise<ProducerItem[]> {
     const producerWins: ProducerItem[] = [];
     const producerWinsList = await this.movieListRepository.find({
@@ -133,8 +129,8 @@ export class MovieListService implements OnApplicationBootstrap {
 
     for (const producerWin of producerWinsList) {
       const year = producerWin.year;
-      const produtores = this.parseProducers(producerWin.producers);
-      for (const producer of produtores) {
+      const producers = this.parseProducers(producerWin.producers);
+      for (const producer of producers) {
         producerWins.push({ producer, year });
       }
     }
@@ -142,19 +138,18 @@ export class MovieListService implements OnApplicationBootstrap {
     return producerWins;
   }
 
-  // Monta os intervalos de premiação para cada produtor
   async buildIntervals(): Promise<IntervalItem[]> {
-    const intervalos: IntervalItem[] = [];
+    const intervals: IntervalItem[] = [];
 
     const producerWins = await this.buildProducerWinList();
 
     producerWins.forEach((producerWin) => {
-      const intervalo = intervalos.find(
+      const interval = intervals.find(
         (prodWin) => prodWin.producer === producerWin.producer,
       );
-      if (intervalo) {
-        if (intervalo.followingWin !== null) {
-          const open = intervalos.find(
+      if (interval) {
+        if (interval.followingWin !== null) {
+          const open = intervals.find(
             (prodInterval) =>
               prodInterval.producer === producerWin.producer &&
               prodInterval.followingWin === null,
@@ -164,11 +159,11 @@ export class MovieListService implements OnApplicationBootstrap {
             open.interval = producerWin.year - open.previousWin;
           }
         } else {
-          intervalo.followingWin = producerWin.year;
-          intervalo.interval = producerWin.year - intervalo.previousWin;
+          interval.followingWin = producerWin.year;
+          interval.interval = producerWin.year - interval.previousWin;
         }
       }
-      intervalos.push({
+      intervals.push({
         producer: producerWin.producer,
         previousWin: producerWin.year,
         followingWin: null,
@@ -176,10 +171,9 @@ export class MovieListService implements OnApplicationBootstrap {
       });
     });
 
-    return intervalos;
+    return intervals;
   }
 
-  // Retorna os produtores com os menores e maiores intervalos de premiação
   async getMinMaxIntervals(): Promise<{
     min: IntervalItem[];
     max: IntervalItem[];
@@ -191,6 +185,10 @@ export class MovieListService implements OnApplicationBootstrap {
         (typeInterval): typeInterval is number =>
           typeof typeInterval === 'number',
       );
+
+    if (validIntervals.length === 0) {
+      return { min: [], max: [] };
+    }
 
     const minInterval = Math.min(...validIntervals);
     const maxInterval = Math.max(...validIntervals);

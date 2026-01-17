@@ -4,7 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 
-describe('Ousera Golden Rasp Award API (e2e)', () => {
+describe('Outsera Golden Rasp Award API (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeAll(async () => {
@@ -21,7 +21,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
   });
 
   describe('POST /movie-list', () => {
-    it('Teste da inclusão de filme', () => {
+    it('Test movie inclusion', () => {
       const createMovieDto = {
         title: 'Godzilla',
         year: 1998,
@@ -41,7 +41,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
         });
     });
 
-    it('retorna 400 se dados inválidos forem fornecidos', () => {
+    it('returns 400 if invalid data is provided', () => {
       const invalidData = {
         title: 'Test Movie',
       };
@@ -52,7 +52,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
         .expect(400);
     });
 
-    it('Testa gravação de multiplos filmes', async () => {
+    it('Test saving multiple movies', async () => {
       const movies = [
         {
           title: 'Spice World',
@@ -80,7 +80,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
   });
 
   describe('GET /movie-list', () => {
-    it('Testa retorno de todos os filmes', () => {
+    it('Test return of all movies', () => {
       return request(app.getHttpServer())
         .get('/movie-list')
         .expect(200)
@@ -90,7 +90,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
         });
     });
 
-    it('Testa resultado dos dados fornecidos na proposta', async () => {
+    it('Test result of data provided in proposal', async () => {
       const res = await request(app.getHttpServer())
         .get('/movie-list/min-max-intervals')
         .expect(200);
@@ -102,7 +102,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
   });
 
   describe('PATCH /movie-list/:id', () => {
-    it('atualizacao parte dos campos do filme', async () => {
+    it('update part of movie fields', async () => {
       const createMovieDto = {
         title: 'The Blair Witch Project',
         year: 1999,
@@ -129,7 +129,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
         .expect(200);
     });
 
-    it('atualizacao todos os campos do filme', async () => {
+    it('update all movie fields', async () => {
       const createMovieDto = {
         title: 'The Haunting',
         year: 1999,
@@ -161,7 +161,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
   });
 
   describe('DELETE /movie-list/:id', () => {
-    it('exclusão de um filme', async () => {
+    it('deletion of a movie', async () => {
       const createMovieDto = {
         title: 'Star Wars: Episode I – The Phantom Menace',
         year: 1999,
@@ -182,7 +182,7 @@ describe('Ousera Golden Rasp Award API (e2e)', () => {
         .expect(200);
     });
 
-    it('excluindo filme inexistente', () => {
+    it('deleting non-existent movie', () => {
       return request(app.getHttpServer())
         .delete('/movie-list/999999')
         .expect(404);

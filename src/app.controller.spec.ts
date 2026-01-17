@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Avaliação backend node JS!"', () => {
-      expect(appController.getAvaliacao()).toBe('Avaliacao');
+      expect(appController.getAvaliacao()).toBe('Avaliação backend node JS!');
     });
   });
 });
